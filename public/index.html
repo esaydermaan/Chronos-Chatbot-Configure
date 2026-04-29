@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chronos Intelligence — Asistente</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #F5F0E8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+  /* SETUP */
+  #setup-screen { background: #fff; border-radius: 16px; padding: 36px 32px; max-width: 460px; width: 100%; box-shadow: 0 4px 32px rgba(15,28,46,0.10); }
+  .setup-logo { width: 48px; height: 48px; border-radius: 50%; background: #C9A84C; color: #0F1C2E; font-family: 'DM Serif Display', serif; font-size: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .setup-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: #0F1C2E; text-align: center; margin-bottom: 4px; }
+  .setup-sub { font-size: 12px; color: #999; text-align: center; margin-bottom: 24px; }
+  .setup-group { margin-bottom: 14px; }
+  .setup-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+  .setup-group input, .setup-group textarea, .setup-group select {
+    width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1a1a1a;
+    outline: none; transition: border-color 0.15s; background: #fff;
+  }
+  .setup-group input:focus, .setup-group textarea:focus, .setup-group select:focus { border-color: #C9A84C; }
+  .setup-group textarea { resize: vertical; min-height: 70px; }
+  .color-row { display: flex; gap: 10px; }
+  .color-item { flex: 1; }
+  .color-item label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
+  .color-item input[type="color"] { width: 100%; height: 36px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; padding: 2px; }
+  .setup-btn { width: 100%; padding: 11px; background: #0F1C2E; color: #C9A84C; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: opacity 0.15s; }
+  .setup-btn:hover { opacity: 0.88; }
+  .setup-divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  .setup-section { font-size: 11px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  /* CHAT */
+  #chat-screen { display: none; width: 100%; max-width: 480px; }
+  .ci-wrap { background: #fff; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; height: 620px; box-shadow: 0 4px 32px rgba(15,28,46,0.12); }
+  .ci-header { padding: 14px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .ci-logo { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; font-family: 'DM Serif Display', serif; flex-shrink: 0; }
+  .ci-header-name { font-family: 'DM Serif Display', serif; font-size: 15px; }
+  .ci-header-status { font-size: 11px; display: flex; align-items: center; gap: 5px; margin-top: 2px; opacity: 0.8; }
+  .ci-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .ci-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; background: #FAFAF8; }
+  .ci-messages::-webkit-scrollbar { width: 4px; }
+  .ci-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+  .msg { display: flex; gap: 8px; max-width: 88%; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.bot { align-self: flex-start; }
+  .msg-avatar { width: 28px; height: 28px; border-radius: 50%; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'DM Serif Display', serif; }
+  .msg.user .msg-avatar { background: #E8E4DC; color: #888; font-family: 'DM Sans', sans-serif; }
+  .msg-bubble { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.65; }
+  .msg.bot .msg-bubble { border-radius: 4px 14px 14px 14px; }
+  .msg.user .msg-bubble { border-radius: 14px 4px 14px 14px; background: #fff; border: 1px solid #EDEAE3; color: #1a1a1a; }
+  .msg-bubble strong { font-weight: 500; }
+  .ci-chips { padding: 0 16px 10px; display: flex; gap: 6px; flex-wrap: wrap; background: #FAFAF8; }
+  .chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; background: transparent; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .ci-input-row { padding: 12px 16px; border-top: 1px solid #EDEAE3; display: flex; gap: 8px; align-items: center; flex-shrink: 0; background: #fff; }
+  .ci-input { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 13.5px; padding: 9px 14px; border-radius: 20px; border: 1px solid #ddd; background: #FAFAF8; color: #1a1a1a; outline: none; transition: border-color 0.15s; }
+  .ci-input::placeholder { color: #bbb; }
+  .ci-send { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s, opacity 0.15s; flex-shrink: 0; }
+  .ci-send:hover { transform: scale(1.06); }
+  .ci-send:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-5px); } }
+  .wha-btn { display: inline-block; margin-top: 8px; padding: 7px 14px; background: #25D366; color: #fff; border-radius: 20px; font-size: 12px; font-weight: 500; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE CONFIGURACIÓN -->
+<div id="setup-screen">
+  <div class="setup-logo">C</div>
+  <div class="setup-title">Chronos Intelligence</div>
+  <p class="setup-sub">Configura el asistente para tu cliente</p>
+
+  <p class="setup-section">Datos del negocio</p>
+
+  <div class="setup-group">
+    <label>Nombre de la joyería / relojería</label>
+    <input type="text" id="cfg-nombre" placeholder="Ej: Joyería Martínez" />
+  </div>
+  <div class="setup-group">
+    <label>WhatsApp (con prefijo país)</label>
+    <input type="text" id="cfg-whatsapp" placeholder="Ej: 34612345678" />
+  </div>
+  <div class="setup-group">
+    <label>Productos principales</label>
+    <input type="text" id="cfg-productos" placeholder="Ej: anillos de compromiso, relojes de lujo, pulseras" />
+  </div>
+  <div class="setup-group">
+    <label>Información adicional del negocio (opcional)</label>
+    <textarea id="cfg-info" placeholder="Ej: llevamos 20 años en el sector, somos distribuidores oficiales de Rolex..."></textarea>
+  </div>
+
+  <hr class="setup-divider"/>
+  <p class="setup-section">Colores del chatbot</p>
+
+  <div class="color-row">
+    <div class="color-item">
+      <label>Color principal</label>
+      <input type="color" id="cfg-color1" value="#0F1C2E" />
+    </div>
+    <div class="color-item">
+      <label>Color acento</label>
+      <input type="color" id="cfg-color2" value="#C9A84C" />
+    </div>
+  </div>
+
+  <hr class="setup-divider"/>
+  <button class="setup-btn" onclick="startChat()">Activar asistente</button>
+</div>
+
+<!-- CHATBOT -->
+<div id="chat-screen">
+  <div class="ci-wrap" id="ci-wrap">
+    <div class="ci-header" id="ci-header">
+      <div class="ci-logo" id="ci-logo">C</div>
+      <div>
+        <div class="ci-header-name" id="ci-header-name">Chronos Intelligence</div>
+        <div class="ci-header-status"><div class="ci-dot" id="ci-dot"></div><span>Asistente activo</span></div>
+      </div>
+    </div>
+    <div class="ci-messages" id="msgs"></div>
+    <div class="ci-chips" id="chips"></div>
+    <div class="ci-input-row">
+      <input class="ci-input" id="inp" placeholder="Escribe tu pregunta..."/>
+      <button class="ci-send" id="sendBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="send-icon">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+var CONFIG = {};
+var history = [];
+
+var CHIPS_INIT  = ["Quiero saber cuanto pierdo", "Que haceis exactamente?", "Ver precios"];
+var CHIPS_LATER = ["Quiero el Chronos Scan", "Cuentame el Conversion Kit", "Sistema completo 24/7"];
+
+function startChat() {
+  var nombre    = document.getElementById('cfg-nombre').value.trim() || 'tu joyeria';
+  var whatsapp  = document.getElementById('cfg-whatsapp').value.trim();
+  var productos = document.getElementById('cfg-productos').value.trim() || 'joyas y relojes';
+  var info      = document.getElementById('cfg-info').value.trim();
+  var color1    = document.getElementById('cfg-color1').value;
+  var color2    = document.getElementById('cfg-color2').value;
+
+  CONFIG = { nombre: nombre, whatsapp: whatsapp, productos: productos, info: info, color1: color1, color2: color2 };
+
+  // Aplicar colores
+  document.getElementById('ci-header').style.background = color1;
+  document.getElementById('ci-logo').style.background = color2;
+  document.getElementById('ci-logo').style.color = color1;
+  document.getElementById('ci-dot').style.background = color2;
+  document.getElementById('ci-header-name').style.color = '#F5F0E8';
+  document.getElementById('sendBtn').style.background = color2;
+  document.getElementById('send-icon').setAttribute('stroke', color1);
+
+  // Estilo chips dinámico
+  var styleEl = document.createElement('style');
+  styleEl.textContent = '.chip { border: 1px solid ' + color2 + '; color: ' + color2 + '; } .chip:hover { background: ' + color2 + '; color: ' + color1 + '; } .ci-input:focus { border-color: ' + color2 + '; } .msg.bot .msg-bubble { background: ' + color1 + '; color: #F5F0E8; border-color: ' + color1 + '; } .msg-bubble strong { color: ' + color2 + '; } .msg-avatar { background: ' + color2 + '; color: ' + color1 + '; } .typing span { background: ' + color2 + '; }';
+  document.head.appendChild(styleEl);
+
+  document.getElementById('ci-header-name').textContent = nombre;
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('chat-screen').style.display = 'block';
+  initChat();
+}
+
+function buildSystem() {
+  var wa = CONFIG.whatsapp ? 'Al final del diagnostico, invita al usuario a contactar por WhatsApp: https://wa.me/' + CONFIG.whatsapp + ' para dar el siguiente paso.' : '';
+  return 'Eres el asistente virtual de ' + CONFIG.nombre + ', una joyeria/relojeria especializada en ' + CONFIG.productos + '. ' + (CONFIG.info ? 'Informacion del negocio: ' + CONFIG.info + '. ' : '') + 'Trabajas con Chronos Intelligence para ayudar al negocio a automatizar sus ventas con IA. Tu objetivo es guiar al visitante por este flujo: 1. PRIMERO: Hacer el Chronos Leak Test de forma conversacional, una pregunta a la vez: a) Cuantas consultas reciben al mes por todos sus canales? b) Cuantas acaban comprando? c) Cuanto tardan en responder? d) Hacen seguimiento a los que no compraron? e) Cual es el ticket medio? 2. DESPUES: Dar un diagnostico con el dinero estimado que pierden. Calculo: consultas x porcentaje_perdido x ticket_medio. Se especifico con numeros. 3. FINALMENTE: Recomendar el siguiente paso e invitar a contactar. ' + wa + ' TONO: Profesional pero cercano. Vende resultados. Mensajes cortos, maximo 3-4 lineas. Usa **texto** para destacar cifras.';
+}
+
+function addMsg(role, html, isTyping) {
+  var msgs = document.getElementById('msgs');
+  var wrap = document.createElement('div');
+  wrap.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  var av = document.createElement('div');
+  av.className = 'msg-avatar';
+  av.textContent = role === 'user' ? 'Tu' : CONFIG.nombre ? CONFIG.nombre[0].toUpperCase() : 'C';
+  var bub = document.createElement('div');
+  bub.className = 'msg-bubble';
+  bub.innerHTML = isTyping ? '<div class="typing"><span></span><span></span><span></span></div>' : html;
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bub;
+}
+
+function setChips(arr) {
+  var c = document.getElementById('chips');
+  c.innerHTML = '';
+  arr.forEach(function(t) {
+    var b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = t;
+    b.onclick = function() { document.getElementById('inp').value = t; send(); };
+    c.appendChild(b);
+  });
+}
+
+function mdToHtml(t) {
+  var out = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  if (CONFIG.whatsapp) {
+    out = out.replace(/(https:\/\/wa\.me\/[^\s<]+)/g, '<a href="$1" class="wha-btn" target="_blank">Contactar por WhatsApp</a>');
+  }
+  return out;
+}
+
+async function callAPI(messages) {
+  var res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, system: buildSystem(), messages: messages })
+  });
+  var data = await res.json();
+  if (data.error) { throw new Error(typeof data.error === 'object' ? data.error.message : data.error); }
+  if (!data.content) { throw new Error('Sin respuesta'); }
+  return data.content.map(function(b) { return b.text || ''; }).join('');
+}
+
+async function send() {
+  var inp = document.getElementById('inp');
+  var btn = document.getElementById('sendBtn');
+  var text = inp.value.trim();
+  if (!text) return;
+  document.getElementById('chips').innerHTML = '';
+  inp.value = '';
+  btn.disabled = true;
+  addMsg('user', text, false);
+  history.push({ role: 'user', content: text });
+  var tb = addMsg('bot', '', true);
+  try {
+    var reply = await callAPI(history);
+    tb.innerHTML = mdToHtml(reply);
+    history.push({ role: 'assistant', content: reply });
+    var lower = reply.toLowerCase();
+    var showLater = lower.indexOf('scan') > -1 || lower.indexOf('kit') > -1 || lower.indexOf('24/7') > -1 || lower.indexOf('whatsapp') > -1 || history.length > 8;
+    setChips(showLater ? CHIPS_LATER : []);
+  } catch(e) {
+    tb.innerHTML = 'Error: ' + e.message;
+  }
+  btn.disabled = false;
+  document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+}
+
+async function initChat() {
+  var btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  document.getElementById('inp').addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
+  btn.addEventListener('click', send);
+  var tb = addMsg('bot', '', true);
+  try {
+    var reply = await callAPI([{ role: 'user', content: 'Saluda al visitante brevemente en nombre de ' + CONFIG.nombre + ', presentate como su asistente de ventas con IA, y ofrece hacer el diagnostico gratuito de fugas de ingresos. Maximo 3 lineas.' }]);
+    tb.innerHTML = mdToHtml(reply);
+    history.push({ role: 'assistant', content: reply });
+    setChips(CHIPS_INIT);
+  } catch(e) {
+    tb.innerHTML = 'Hola! Soy el asistente de <strong>' + CONFIG.nombre + '</strong>. Quieres descubrir cuanto dinero estas perdiendo cada mes?';
+    setChips(CHIPS_INIT);
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
